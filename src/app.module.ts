@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { MovementModule } from './modules/movement/movement.module';
 
 @Module({
   imports: [
@@ -9,7 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
       envFilePath: ['.env'],
       isGlobal: true,
     }),
-    DatabaseModule,AuthModule
+    DatabaseModule,AuthModule,MovementModule
   ],
   controllers: [],
   providers: [],

@@ -1,4 +1,3 @@
-// auth.service.ts
 import { Inject, Injectable, UnauthorizedException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
@@ -10,7 +9,7 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService, @Inject('USER_REPOSITORY')
   private readonly userRepository: Repository<User>,) { }
 
-  async register(name: string, email: string, password: string): Promise<any> {
+  async register(name: string, email: string, password: string, rut: string): Promise<any> {
     try {
       // Check if user with email already exists
       const existingUser = await this.userRepository.findOne({ where: { email } });
@@ -26,14 +25,15 @@ export class AuthService {
         name,
         email,
         password: hashedPassword,
+        rut,
       });
       await this.userRepository.save(newUser);
 
-      // Generate JWT
-      const payload = { email };
-      const accessToken = this.jwtService.sign(payload);
+      // Generate JWT token
+      const accessToken = this.generateAccessToken(newUser);
 
-      return { statusCode: HttpStatus.OK, accessToken };
+      // Return success response with token
+      return { statusCode: HttpStatus.OK, message: 'User registered successfully', accessToken };
     } catch (error) {
       return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, error: error };
     }
@@ -53,10 +53,10 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Generate JWT
-      const payload = { email };
-      const accessToken = this.jwtService.sign(payload);
+      // Generate JWT token
+      const accessToken = this.generateAccessToken(user);
 
+      // Return success response with token
       return { statusCode: HttpStatus.OK, accessToken };
     } catch (error) {
       return { statusCode: HttpStatus.UNAUTHORIZED, error: error };
@@ -71,5 +71,11 @@ export class AuthService {
     } catch (error) {
       return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, error: error };
     }
+  }
+
+  // Helper function to generate JWT token
+  private generateAccessToken(user: User): string {
+    const payload = { email: user.email, rut: user.rut }; // You can include more information if needed
+    return this.jwtService.sign(payload);
   }
 }

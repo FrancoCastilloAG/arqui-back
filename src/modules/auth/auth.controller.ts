@@ -4,12 +4,12 @@ import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
-  async register(@Body() body: { name: string, email: string, password: string }) {
-    const { name, email, password } = body;
-    return await this.authService.register(name, email, password);
+  async register(@Body() body: { name: string, email: string, password: string, rut: string }) {
+    const { name, email, password,rut } = body;
+    return await this.authService.register(name, email, password, rut);
   }
 
   @Post('login')

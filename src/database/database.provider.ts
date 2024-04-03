@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { User } from './entities/user.entity';
+import { Movement } from './entities/movement.entity';
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ const dataSource = new DataSource({
   database: TYPEORM_DATABASE,
   logging: true,
   synchronize: false,
-  entities: [User],
+  entities: [User,Movement],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 });
 

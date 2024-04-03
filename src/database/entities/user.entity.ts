@@ -1,18 +1,25 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { Movement } from "./movement.entity";
 
 @Entity({
-    name:'users'
+    name: 'users'
 })
 export class User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
     
-    @Column({ type: 'text' })
-    name:string;
+    @Column()
+    name: string;
 
-    @Column({ type: 'text' })
-    email:string;
+    @Column()
+    email: string;
     
-    @Column({ type: 'text' })
-    password:string;
+    @Column()
+    password: string;
+
+    @Column()
+    rut: string;
+
+    @OneToMany(() => Movement, (movement) => movement.user)
+    movements!: Movement[];
 }
