@@ -33,12 +33,11 @@ export class AuthService {
       const accessToken = this.generateAccessToken(newUser);
 
       // Return success response with token
-      return { statusCode: HttpStatus.OK, message: 'User registered successfully', accessToken };
+      return { statusCode: HttpStatus.OK, message: 'User registered successfully', rut };
     } catch (error) {
       return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, error: error };
     }
   }
-
   async login(email: string, password: string): Promise<any> {
     try {
       // Find user by email
@@ -56,13 +55,12 @@ export class AuthService {
       // Generate JWT token
       const accessToken = this.generateAccessToken(user);
 
-      // Return success response with token
-      return { statusCode: HttpStatus.OK, accessToken };
+      // Return success response with token and RUT
+      return { statusCode: HttpStatus.OK, accessToken, rut: user.rut };
     } catch (error) {
       return { statusCode: HttpStatus.UNAUTHORIZED, error: error };
     }
   }
-
   async validateUser(email: string): Promise<any> {
     try {
       // Find user by email
