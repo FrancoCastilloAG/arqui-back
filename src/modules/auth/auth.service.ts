@@ -1,79 +1,43 @@
-import { Inject, Injectable, UnauthorizedException, HttpStatus } from '@nestjs/common';
+import { Inject, ConflictException, Injectable, NotFoundException ,BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { User } from 'src/database/entities/user.entity';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { hash,compare } from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService, @Inject('USER_REPOSITORY')
   private readonly userRepository: Repository<User>,) { }
 
-  async register(name: string, email: string, password: string, rut: string): Promise<any> {
-    try {
-      // Check if user with email already exists
-      const existingUser = await this.userRepository.findOne({ where: { email } });
-      if (existingUser) {
-        throw new UnauthorizedException('User with this email already exists');
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create new user
-      const newUser = this.userRepository.create({
-        name,
-        email,
-        password: hashedPassword,
-        rut,
-      });
-      await this.userRepository.save(newUser);
-
-      // Generate JWT token
-      const accessToken = this.generateAccessToken(newUser);
-
-      // Return success response with token
-      return { statusCode: HttpStatus.OK, message: 'User registered successfully', rut };
-    } catch (error) {
-      return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, error: error };
+  async ValidateUser(loginUserDto: LoginUserDto): Promise<{ access_token: string ,rut:string}> {
+    const user = await this.userRepository.findOne({ where: { email: loginUserDto.email }});
+    if (user) {
+        if(await compare(loginUserDto.password, user.password)) { //contraseña correcta si es true
+          console.log(user.rut)
+            const payload = {id:user.id,name:user.name,rut:user.rut}
+           return {
+            access_token: await this.jwtService.signAsync(payload),
+            rut: user.rut, // Devolver el rut junto con el token
+        };
+        }
     }
-  }
-  async login(email: string, password: string): Promise<any> {
-    try {
-      // Find user by email
-      const user = await this.userRepository.findOne({ where: { email } });
-      if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      // Check if password is correct
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      // Generate JWT token
-      const accessToken = this.generateAccessToken(user);
-
-      // Return success response with token and RUT
-      return { statusCode: HttpStatus.OK, accessToken, rut: user.rut };
-    } catch (error) {
-      return { statusCode: HttpStatus.UNAUTHORIZED, error: error };
+    throw new NotFoundException('Usuario no encontrado');
+}
+async create({name,email,password,rut }: RegisterUserDto): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { email }});
+    if (!name || !email || !password) {
+        throw new BadRequestException('Todos los campos son obligatorios');
     }
-  }
-  async validateUser(email: string): Promise<any> {
-    try {
-      // Find user by email
-      const user = await this.userRepository.findOne({ where: { email } });
-      return { statusCode: HttpStatus.OK, user };
-    } catch (error) {
-      return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, error: error };
+    if (!user) {
+      const hashedPassword = await hash(password, 10);
+      const newUser = this.userRepository.create({name,email, password:hashedPassword,rut});
+      console.log('usuario guardado');
+      return await this.userRepository.save(newUser);
     }
-  }
-
-  // Helper function to generate JWT token
-  private generateAccessToken(user: User): string {
-    const payload = { email: user.email, rut: user.rut }; // You can include more information if needed
-    return this.jwtService.sign(payload);
-  }
+    else{
+        throw new ConflictException('El correo electrónico ya está en uso');
+    }
+}
 }

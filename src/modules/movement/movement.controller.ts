@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Param, Put, Delete,Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Put, Delete,Get ,UseGuards} from '@nestjs/common';
 import { MovementService } from './movement.service';
 import { movementDto } from './dto/movement.dto';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('movements')
+@UseGuards(AuthGuard)
 export class MovementController {
   constructor(private readonly movementService: MovementService) {}
 
@@ -12,6 +14,7 @@ export class MovementController {
   }
   @Get(':rut')
   async getAllMovementsByUser(@Param('rut') rut: string) {
+    console.log("llamdao a obtener ususarios")
     return this.movementService.getAllMovementsByUser(rut);
   }
 
